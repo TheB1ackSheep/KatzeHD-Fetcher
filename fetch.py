@@ -3,18 +3,7 @@ import urllib2
 from bs4 import BeautifulSoup
 import sys
 import os
-
-'''link = raw_input('Enter movie link: ')
-name = raw_input('Name: ')
-response = urllib2.urlopen(link)
-html = response.read()
-
-soup = BeautifulSoup(html, 'html.parser')
-links = soup.find_all(href=re.compile('docs.google'))
-
-for link in links:
-	link2 = BeautifulSoup(link.encode('utf-8'), 'html.parser')
-	print ("nohup wget '{}' -O '{}.{}..mp4' & ").format(link2.a['href'], name, link2.text.strip())'''
+import subprocess
 
 def check_resume_supported(url):
 	req = urllib2.Request(url)
@@ -48,6 +37,7 @@ def get_video_links(name, url):
 		f['resolution'] = link.text.strip()
 		f['url'] = link.a['href']
 		f['lang'] = 'EN'
+		f['file_name'] = name + '.EN.'  + f['resolution'] + '.mp4'
 		files.append(f)
 	soup = BeautifulSoup(th, 'html.parser')
 	for link in soup.find_all(href=re.compile('docs.google')):
@@ -57,8 +47,21 @@ def get_video_links(name, url):
                 f['resolution'] = link.text.strip()
                 f['url'] = link.a['href']
                 f['lang'] = 'TH'
+		f['file_name'] = name + '.TH.'  + f['resolution'] + '.mp4'
                 files.append(f)
 	return files
-#	print str(target[1]).split('<br>')
 
-get_video_links('', raw_input('Enter movie link: '))
+def download_videos(name, videos):
+	real_dir = os.path.join(os.getcwd(), name)+os.sep
+	if not os.path.isdir(os.getcwd()+name):
+		os.mkdir(real_dir)
+	for video in videos:
+		subprocess.Popen(["nohup", "wget", video['url'], "-O", real_dir+video['file_name']])
+
+
+name = raw_input('Enter Movie Name: ').replace(' ','.')
+url = raw_input('Enter movie link: ')
+videos = get_video_links(name,url)
+print "Movie url fetched. Start downloading..."
+download_videos(name, videos)
+print "Downloading is running in background. Done !!!"
